@@ -9,7 +9,17 @@ class DashboardController {
         }
 
         $articleModel = new Article();
-        $articles = $articleModel->getLatestAccepted(5); // Get last 5 accepted articles
+        
+        // Get search query from GET parameters
+        $search = $_GET['search'] ?? '';
+        
+        if (!empty($search)) {
+            // If search is provided, get filtered articles
+            $articles = $articleModel->searchArticles($search, 5);
+        } else {
+            // Otherwise get latest accepted articles
+            $articles = $articleModel->getLatestAccepted(5);
+        }
 
         require __DIR__ . '/../views/dashboard.php';
     }

@@ -250,6 +250,71 @@
             padding: 10px;
             font-size: 0.9rem;
         }
+
+        /* Search Form Styles */
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            margin: 0;
+        }
+
+        .search-input {
+            border: 2px solid var(--border-color);
+            border-radius: 25px 0 0 25px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-right: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+
+        .search-btn {
+            border-radius: 0 25px 25px 0;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--hover-color));
+            border: 2px solid var(--secondary-color);
+            border-left: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, var(--hover-color), var(--secondary-color));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-outline-secondary {
+            border-radius: 25px;
+            margin-left: 10px;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .input-group {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 25px;
+            overflow: hidden;
+        }
     </style>
 </head>
 
@@ -296,7 +361,45 @@
     </nav>
 
     <div class="container">
-        <h2 class="page-title">Latest 5 Approved Articles</h2>
+        <?php if (!empty($_GET['search'])): ?>
+            <h2 class="page-title">
+                <i class="fas fa-search me-2"></i>
+                Search Results for "<?= htmlspecialchars($_GET['search']) ?>"
+            </h2>
+        <?php else: ?>
+            <h2 class="page-title">Latest 5 Approved Articles</h2>
+        <?php endif; ?>
+        
+        <!-- Search Form -->
+        <div class="search-container mb-4">
+            <form method="GET" action="index.php" class="search-form">
+                <input type="hidden" name="controller" value="dashboard">
+                <input type="hidden" name="action" value="index">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                name="search" 
+                                class="form-control search-input" 
+                                placeholder="Search articles by title or keywords..." 
+                                value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+                                aria-label="Search articles"
+                            >
+                            <button class="btn btn-primary search-btn" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <?php if (!empty($_GET['search'])): ?>
+                                <a href="index.php?controller=dashboard&action=index" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
         <div class="articles-container">
             <div class="row g-4">
                 <?php if ($articles && $articles->num_rows > 0): ?>
@@ -369,7 +472,18 @@
                 <?php else: ?>
                     <div class="col-12">
                         <div class="alert alert-info text-center py-4">
-                            <i class="fas fa-info-circle me-2"></i>No approved articles found
+                            <?php if (!empty($_GET['search'])): ?>
+                                <i class="fas fa-search me-2"></i>
+                                No articles found matching "<?= htmlspecialchars($_GET['search']) ?>"
+                                <br>
+                                <small class="mt-2 d-block">
+                                    <a href="index.php?controller=dashboard&action=index" class="text-decoration-none">
+                                        <i class="fas fa-arrow-left me-1"></i>View all articles
+                                    </a>
+                                </small>
+                            <?php else: ?>
+                                <i class="fas fa-info-circle me-2"></i>No approved articles found
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>

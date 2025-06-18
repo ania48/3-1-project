@@ -98,6 +98,61 @@ class Article
         return $stmt->get_result();
     }
 
+    public function searchArticles($searchTerm, $limit = 5)
+    {
+        $searchTerm = '%' . $searchTerm . '%';
+        $stmt = $this->db->prepare("
+            SELECT a.*, u.name AS author_name,
+                (SELECT COUNT(*) FROM articles a2 
+                    WHERE a2.id = a.id 
+                    AND JSON_CONTAINS(a2.comments, '{\"status\": \"approved\"}', '$[*]')) as comment_count
+            FROM articles a 
+            JOIN users u ON a.author_id = u.id 
+            WHERE a.status = 'accepted' 
+            AND (a.title LIKE ? OR a.keywords LIKE ?)
+            ORDER BY a.created_at DESC 
+            LIMIT ?
+        ");
+        
+        if ($stmt === false) {
+            // Fallback for MySQL versions that don't support JSON_CONTAINS
+            $stmt = $this->db->prepare("
+                SELECT a.*, u.name AS author_name,
+                    (SELECT COUNT(*) FROM articles a2 
+                        WHERE a2.id = a.id 
+                        AND a2.comments IS NOT NULL 
+                        AND a2.comments != '[]') as comment_count
+                FROM articles a 
+                JOIN users u ON a.author_id = u.id 
+                WHERE a.status = 'accepted' 
+                AND (a.title LIKE ? OR a.keywords LIKE ?)
+                ORDER BY a.created_at DESC 
+                LIMIT ?
+            ");
+        }
+        
+        if ($stmt === false) {
+            // Final fallback
+            $stmt = $this->db->prepare("
+                SELECT a.*, u.name AS author_name, 0 as comment_count
+                FROM articles a 
+                JOIN users u ON a.author_id = u.id 
+                WHERE a.status = 'accepted' 
+                AND (a.title LIKE ? OR a.keywords LIKE ?)
+                ORDER BY a.created_at DESC 
+                LIMIT ?
+            ");
+        }
+        
+        if ($stmt === false) {
+            throw new Exception("Failed to prepare statement: " . $this->db->error);
+        }
+        
+        $stmt->bind_param("ssi", $searchTerm, $searchTerm, $limit);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+
     public function addComment($article_id, $user_id, $content)
     {
 
